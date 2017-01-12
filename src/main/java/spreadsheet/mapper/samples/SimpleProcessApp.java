@@ -53,6 +53,7 @@ public class SimpleProcessApp {
 
     List<Person> personList = sheetProcessHelper.process();
 
+    System.out.println("-------------------------blow is the person information from excel------------------------------");
     for (Person person : personList) {
       System.out.println(person);
     }
