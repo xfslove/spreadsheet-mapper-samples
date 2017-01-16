@@ -12,7 +12,7 @@ import spreadsheet.mapper.w2o.validation.DefaultSheetValidationHelper;
 import spreadsheet.mapper.w2o.validation.validator.cell.DigitsValidator;
 import spreadsheet.mapper.w2o.validation.validator.cell.LocalDateValidator;
 import spreadsheet.mapper.w2o.validation.validator.cell.RequireValidator;
-import spreadsheet.mapper.w2o.validation.validator.row.MultiUniqueInImportFileValidator;
+import spreadsheet.mapper.w2o.validation.validator.row.MultiUniqueValidator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,38 +31,41 @@ public class SimpleValidationApp {
 
   public static void valid(File file) throws FileNotFoundException {
 
-    SheetMetaFactory sheetMetaFactory = new DefaultSheetMetaFactory(1, 3, new int[]{1, 2});
 
+    // read excel to workbook
     WorkbookReader reader = new Excel2WorkbookReader();
 
     Workbook workbook = reader.read(new FileInputStream(file));
 
     Sheet sheet = workbook.getFirstSheet();
 
+    // get sheet meta from excel
+    SheetMetaFactory sheetMetaFactory = new DefaultSheetMetaFactory(1, 3, 1, 2);
+
     SheetMeta sheetMeta = sheetMetaFactory.create(sheet);
 
     DefaultSheetValidationHelper sheetValidationHelper = new DefaultSheetValidationHelper();
 
     sheetValidationHelper.sheet(sheet).sheetMeta(sheetMeta);
-
     sheetValidationHelper.cellValidators(
-        new RequireValidator()
-            .group("require.fields")
-            .matchFields("name", "birthday", "age", "idCardNumber", "idCardType.name", "gender.name")
-            .errorMessage("required")
-            .end()
+        new RequireValidator().matchField("name").errorMessage("required").end(),
+        new RequireValidator().matchField("birthday").errorMessage("required").end(),
+        new RequireValidator().matchField("age").errorMessage("required").end(),
+        new RequireValidator().matchField("idCardNumber").errorMessage("required").end(),
+        new RequireValidator().matchField("idCardType.name").errorMessage("required").end(),
+        new RequireValidator().matchField("gender.name").errorMessage("required").end()
     );
     sheetValidationHelper.cellValidators(
-        new LocalDateValidator().matchField("birthday").pattern("yyyy-MM-dd").dependsOn("require.fields").end()
+        new LocalDateValidator().matchField("birthday").pattern("yyyy-MM-dd").end()
     );
     sheetValidationHelper.cellValidators(
-        new DigitsValidator().matchField("age").dependsOn("require.fields").end()
+        new DigitsValidator().matchField("age").end()
     );
     sheetValidationHelper.rowValidators(
-        new MultiUniqueInImportFileValidator()
+        new MultiUniqueValidator()
             .multiUniqueFields("idCardNumber", "idCardType.name")
             .group("identify.unique")
-            .dependsOn("require.fields")
+            .dependsOn("idCardType.name", "idCardNumber")
             .errorMessage("identify must multi unique")
             .end()
     );

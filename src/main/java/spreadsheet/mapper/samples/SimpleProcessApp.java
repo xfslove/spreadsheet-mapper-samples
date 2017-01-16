@@ -33,13 +33,15 @@ public class SimpleProcessApp {
 
   public static void process(InputStream inputStream) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
 
-    SheetMetaFactory sheetMetaFactory = new DefaultSheetMetaFactory(1, 3, new int[]{1, 2});
-
+    // read excel to workbook
     WorkbookReader reader = new Excel2WorkbookReader();
 
     Workbook workbook = reader.read(inputStream);
 
     Sheet sheet = workbook.getFirstSheet();
+
+    // get sheet meta from excel
+    SheetMetaFactory sheetMetaFactory = new DefaultSheetMetaFactory(1, 3, 1, 2);
 
     SheetMeta sheetMeta = sheetMetaFactory.create(sheet);
 
@@ -51,6 +53,7 @@ public class SimpleProcessApp {
         new LocalDateValueSetter<>("yyyy-MM-dd", "birthday")
     );
 
+    // workbook to objects
     List<Person> personList = sheetProcessHelper.process();
 
     System.out.println("-------------------------blow is the person information from excel------------------------------");

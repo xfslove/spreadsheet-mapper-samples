@@ -33,6 +33,7 @@ public class SimpleExportApp {
 
   public static void generate(OutputStream outputStream) throws FileNotFoundException {
 
+    // build a sheet meta corresponding the excel sheet
     SequenceBasedSheetMetaBuilder sheetMetaBuilder = new SequenceBasedSheetMetaBuilder();
 
     SheetMeta sheetMeta = sheetMetaBuilder
@@ -45,12 +46,14 @@ public class SimpleExportApp {
         .field("gender.name").header("gender.name").next()
         .toSheetMeta(2);
 
+    // objects to workbook
     SheetComposeHelper<Person> sheetComposeHelper = new DefaultSheetComposeHelper<Person>().sheetMeta(sheetMeta).data(getPersons());
 
     WorkbookComposeHelper workbookComposeHelper = new DefaultWorkbookComposeHelper();
 
     Workbook workbook = workbookComposeHelper.sheetComposes(sheetComposeHelper).compose();
 
+    // write workbook to excel
     WorkbookWriter workbookWriter = new Workbook2ExcelWriter(true);
 
     workbookWriter.write(workbook, outputStream);
