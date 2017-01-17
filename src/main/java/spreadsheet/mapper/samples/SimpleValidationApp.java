@@ -48,18 +48,18 @@ public class SimpleValidationApp {
 
     sheetValidationHelper.sheet(sheet).sheetMeta(sheetMeta);
     sheetValidationHelper.cellValidators(
-        new RequireValidator().matchField("name").errorMessage("required").end(),
-        new RequireValidator().matchField("birthday").errorMessage("required").end(),
-        new RequireValidator().matchField("age").errorMessage("required").end(),
-        new RequireValidator().matchField("idCardNumber").errorMessage("required").end(),
-        new RequireValidator().matchField("idCardType.name").errorMessage("required").end(),
-        new RequireValidator().matchField("gender.name").errorMessage("required").end()
+        new RequireValidator().matchField("name").errorMessage("required"),
+        new RequireValidator().matchField("birthday").errorMessage("required"),
+        new RequireValidator().matchField("age").errorMessage("required"),
+        new RequireValidator().matchField("idCardNumber").errorMessage("required"),
+        new RequireValidator().matchField("idCardType.name").errorMessage("required"),
+        new RequireValidator().matchField("gender.name").errorMessage("required")
     );
     sheetValidationHelper.cellValidators(
-        new LocalDateValidator().matchField("birthday").pattern("yyyy-MM-dd").end()
+        new LocalDateValidator().matchField("birthday").pattern("yyyy-MM-dd")
     );
     sheetValidationHelper.cellValidators(
-        new DigitsValidator().matchField("age").end()
+        new DigitsValidator().matchField("age")
     );
     sheetValidationHelper.rowValidators(
         new MultiUniqueValidator()
@@ -67,7 +67,7 @@ public class SimpleValidationApp {
             .group("identify.unique")
             .dependsOn("idCardType.name", "idCardNumber")
             .errorMessage("identify must multi unique")
-            .end()
+            
     );
 
     // do valid

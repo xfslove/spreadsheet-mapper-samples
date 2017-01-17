@@ -12,7 +12,7 @@ import spreadsheet.mapper.w2o.process.SheetProcessHelper;
 import spreadsheet.mapper.w2o.process.factory.DefaultSheetMetaFactory;
 import spreadsheet.mapper.w2o.process.factory.ObjectFactory;
 import spreadsheet.mapper.w2o.process.factory.SheetMetaFactory;
-import spreadsheet.mapper.w2o.process.setter.LocalDateValueSetter;
+import spreadsheet.mapper.w2o.process.setter.LocalDateSetter;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,8 +49,8 @@ public class SimpleProcessApp {
 
     sheetProcessHelper.sheet(sheet).sheetMeta(sheetMeta).objectFactory(new PersonFactory());
 
-    sheetProcessHelper.fieldValueSetters(
-        new LocalDateValueSetter<>("yyyy-MM-dd", "birthday")
+    sheetProcessHelper.fieldSetters(
+        new LocalDateSetter<Person>().pattern("yyyy-MM-dd").matchField("birthday")
     );
 
     // workbook to objects
