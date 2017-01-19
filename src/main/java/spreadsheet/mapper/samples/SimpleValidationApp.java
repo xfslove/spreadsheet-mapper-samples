@@ -1,13 +1,13 @@
 package spreadsheet.mapper.samples;
 
-import spreadsheet.mapper.f2w.read.Excel2WorkbookReader;
-import spreadsheet.mapper.f2w.read.WorkbookReader;
-import spreadsheet.mapper.m2f.write.Message2ExcelWriter;
+import spreadsheet.mapper.f2w.read.Excel2WorkbookReadHelper;
+import spreadsheet.mapper.f2w.read.WorkbookReadHelper;
+import spreadsheet.mapper.m2f.write.Message2ExcelWriteHelper;
 import spreadsheet.mapper.model.core.Sheet;
 import spreadsheet.mapper.model.core.Workbook;
-import spreadsheet.mapper.model.meta.SheetMeta;
-import spreadsheet.mapper.w2o.process.factory.DefaultSheetMetaFactory;
-import spreadsheet.mapper.w2o.process.factory.SheetMetaFactory;
+import spreadsheet.mapper.model.meta.WorkbookMeta;
+import spreadsheet.mapper.utils.SingleSheetWorkbookMetaFactory;
+import spreadsheet.mapper.w2o.WorkbookMetaFactory;
 import spreadsheet.mapper.w2o.validation.DefaultSheetValidationHelper;
 import spreadsheet.mapper.w2o.validation.validator.cell.DigitsValidator;
 import spreadsheet.mapper.w2o.validation.validator.cell.LocalDateValidator;
@@ -33,49 +33,49 @@ public class SimpleValidationApp {
 
 
     // read excel to workbook
-    WorkbookReader reader = new Excel2WorkbookReader();
+    WorkbookReadHelper reader = new Excel2WorkbookReadHelper();
 
     Workbook workbook = reader.read(new FileInputStream(file));
 
     Sheet sheet = workbook.getFirstSheet();
 
     // get sheet meta from excel
-    SheetMetaFactory sheetMetaFactory = new DefaultSheetMetaFactory(1, 3, 1, 2);
-
-    SheetMeta sheetMeta = sheetMetaFactory.create(sheet);
+    WorkbookMetaFactory workbookMetaFactory = new SingleSheetWorkbookMetaFactory();
+    WorkbookMeta workbookMeta = workbookMetaFactory.create(workbook);
 
     DefaultSheetValidationHelper sheetValidationHelper = new DefaultSheetValidationHelper();
 
-    sheetValidationHelper.sheet(sheet).sheetMeta(sheetMeta);
-    sheetValidationHelper.cellValidators(
-        new RequireValidator().matchField("name").errorMessage("required"),
-        new RequireValidator().matchField("birthday").errorMessage("required"),
-        new RequireValidator().matchField("age").errorMessage("required"),
-        new RequireValidator().matchField("idCardNumber").errorMessage("required"),
-        new RequireValidator().matchField("idCardType.name").errorMessage("required"),
-        new RequireValidator().matchField("gender.name").errorMessage("required")
-    );
-    sheetValidationHelper.cellValidators(
-        new LocalDateValidator().matchField("birthday").pattern("yyyy-MM-dd")
-    );
-    sheetValidationHelper.cellValidators(
-        new DigitsValidator().matchField("age")
-    );
-    sheetValidationHelper.rowValidators(
+    sheetValidationHelper.addCellValidator(
+        new RequireValidator().matchField("name").errorMessage("required"));
+    sheetValidationHelper.addCellValidator(
+        new RequireValidator().matchField("birthday").errorMessage("required"));
+    sheetValidationHelper.addCellValidator(
+        new RequireValidator().matchField("age").errorMessage("required"));
+    sheetValidationHelper.addCellValidator(
+        new RequireValidator().matchField("idCardNumber").errorMessage("required"));
+    sheetValidationHelper.addCellValidator(
+        new RequireValidator().matchField("idCardType.name").errorMessage("required"));
+    sheetValidationHelper.addCellValidator(
+        new RequireValidator().matchField("gender.name").errorMessage("required"));
+    sheetValidationHelper.addCellValidator(
+        new LocalDateValidator().matchField("birthday").pattern("yyyy-MM-dd"));
+    sheetValidationHelper.addCellValidator(
+        new DigitsValidator().matchField("age"));
+    sheetValidationHelper.addRowValidator(
         new MultiUniqueValidator()
             .multiUniqueFields("idCardNumber", "idCardType.name")
             .group("identify.unique")
             .dependsOn("idCardType.name", "idCardNumber")
             .errorMessage("identify must multi unique")
-            
+
     );
 
     // do valid
-    boolean valid = sheetValidationHelper.valid();
+    boolean valid = sheetValidationHelper.valid(workbook.getFirstSheet(), workbookMeta.getFirstSheetMeta());
 
     if (!valid) {
       // write error message
-      Message2ExcelWriter writer = new Message2ExcelWriter(new FileInputStream(file));
+      Message2ExcelWriteHelper writer = new Message2ExcelWriteHelper(new FileInputStream(file));
       writer.write(sheetValidationHelper.getErrorMessages(), new FileOutputStream(file));
     }
   }

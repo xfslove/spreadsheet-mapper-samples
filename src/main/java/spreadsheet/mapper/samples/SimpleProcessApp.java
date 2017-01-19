@@ -1,17 +1,17 @@
 package spreadsheet.mapper.samples;
 
-import spreadsheet.mapper.f2w.read.Excel2WorkbookReader;
-import spreadsheet.mapper.f2w.read.WorkbookReader;
+import spreadsheet.mapper.f2w.read.Excel2WorkbookReadHelper;
+import spreadsheet.mapper.f2w.read.WorkbookReadHelper;
 import spreadsheet.mapper.model.Person;
 import spreadsheet.mapper.model.core.Row;
 import spreadsheet.mapper.model.core.Sheet;
 import spreadsheet.mapper.model.core.Workbook;
 import spreadsheet.mapper.model.meta.SheetMeta;
+import spreadsheet.mapper.model.meta.WorkbookMeta;
+import spreadsheet.mapper.utils.SingleSheetWorkbookMetaFactory;
 import spreadsheet.mapper.w2o.process.DefaultSheetProcessHelper;
+import spreadsheet.mapper.w2o.process.ObjectFactory;
 import spreadsheet.mapper.w2o.process.SheetProcessHelper;
-import spreadsheet.mapper.w2o.process.factory.DefaultSheetMetaFactory;
-import spreadsheet.mapper.w2o.process.factory.ObjectFactory;
-import spreadsheet.mapper.w2o.process.factory.SheetMetaFactory;
 import spreadsheet.mapper.w2o.process.setter.LocalDateSetter;
 
 import java.io.File;
@@ -34,27 +34,27 @@ public class SimpleProcessApp {
   public static void process(InputStream inputStream) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
 
     // read excel to workbook
-    WorkbookReader reader = new Excel2WorkbookReader();
+    WorkbookReadHelper reader = new Excel2WorkbookReadHelper();
 
     Workbook workbook = reader.read(inputStream);
 
     Sheet sheet = workbook.getFirstSheet();
 
     // get sheet meta from excel
-    SheetMetaFactory sheetMetaFactory = new DefaultSheetMetaFactory(1, 3, 1, 2);
+    SingleSheetWorkbookMetaFactory workbookMetaFactory = new SingleSheetWorkbookMetaFactory();
 
-    SheetMeta sheetMeta = sheetMetaFactory.create(sheet);
+    WorkbookMeta workbookMeta = workbookMetaFactory.create(workbook);
 
     SheetProcessHelper<Person> sheetProcessHelper = new DefaultSheetProcessHelper<>();
 
-    sheetProcessHelper.sheet(sheet).sheetMeta(sheetMeta).objectFactory(new PersonFactory());
+    sheetProcessHelper.setObjectFactory(new PersonFactory());
 
-    sheetProcessHelper.fieldSetters(
+    sheetProcessHelper.addFieldSetter(
         new LocalDateSetter<Person>().pattern("yyyy-MM-dd").matchField("birthday")
     );
 
     // workbook to objects
-    List<Person> personList = sheetProcessHelper.process();
+    List<Person> personList = sheetProcessHelper.process(workbook.getFirstSheet(), workbookMeta.getFirstSheetMeta());
 
     System.out.println("-------------------------blow is the person information from excel------------------------------");
     for (Person person : personList) {
@@ -65,7 +65,7 @@ public class SimpleProcessApp {
   private static class PersonFactory implements ObjectFactory<Person> {
 
     @Override
-    public Person create(Row row) {
+    public Person create(Row row, SheetMeta sheetMeta) {
       return new Person();
     }
   }

@@ -5,20 +5,22 @@ import spreadsheet.mapper.model.Gender;
 import spreadsheet.mapper.model.IdCardType;
 import spreadsheet.mapper.model.Person;
 import spreadsheet.mapper.model.core.Workbook;
-import spreadsheet.mapper.model.meta.SheetMeta;
+import spreadsheet.mapper.model.meta.WorkbookMeta;
 import spreadsheet.mapper.o2w.compose.DefaultSheetComposeHelper;
 import spreadsheet.mapper.o2w.compose.DefaultWorkbookComposeHelper;
 import spreadsheet.mapper.o2w.compose.SheetComposeHelper;
 import spreadsheet.mapper.o2w.compose.WorkbookComposeHelper;
-import spreadsheet.mapper.o2w.compose.builder.SequenceBasedSheetMetaBuilder;
-import spreadsheet.mapper.w2f.write.Workbook2ExcelWriter;
-import spreadsheet.mapper.w2f.write.WorkbookWriter;
+import spreadsheet.mapper.utils.PromptBuilder;
+import spreadsheet.mapper.utils.SingleSheetWorkbookMetaBuilder;
+import spreadsheet.mapper.w2f.write.Workbook2ExcelWriteHelper;
+import spreadsheet.mapper.w2f.write.WorkbookWriteHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -34,27 +36,30 @@ public class SimpleExportApp {
   public static void generate(OutputStream outputStream) throws FileNotFoundException {
 
     // build a sheet meta corresponding the excel sheet
-    SequenceBasedSheetMetaBuilder sheetMetaBuilder = new SequenceBasedSheetMetaBuilder();
+    SingleSheetWorkbookMetaBuilder workbookMetaBuilder = new SingleSheetWorkbookMetaBuilder();
 
-    SheetMeta sheetMeta = sheetMetaBuilder
-        .field("name").header("name").next()
-        .field("birthday").header("birthday").next()
-        .field("age").header("age").next()
-        .field("idCardNumber").header("idCardNumber").next()
-        .field("idCardType.name").header("idCardType.name").next()
-        .field("address").header("address").next()
-        .field("gender.name").header("gender.name").next()
-        .toSheetMeta(2);
+    WorkbookMeta workbookMeta = workbookMetaBuilder
+        .fields("name", "birthday", "age", "idCardNumber", "idCardType.name", "address", "gender.name")
+        .titles("name", "birthday", "age", "idCardNumber", "idCardType.name", "address", "gender.name")
+        .prompts(
+            new PromptBuilder()
+                .require(
+                    "name", "birthday", "age", "idCardNumber", "idCardType.name", "gender.name"
+                ).number("age")
+                .build()
+        )
+        .prompt("birthday", "format:yyyy-MM-dd")
+        .toWorkbookMeta();
 
     // objects to workbook
-    SheetComposeHelper<Person> sheetComposeHelper = new DefaultSheetComposeHelper<Person>().sheetMeta(sheetMeta).data(getPersons());
+    SheetComposeHelper<Person> sheetComposeHelper = new DefaultSheetComposeHelper<Person>();
 
     WorkbookComposeHelper workbookComposeHelper = new DefaultWorkbookComposeHelper();
 
-    Workbook workbook = workbookComposeHelper.sheetComposes(sheetComposeHelper).compose();
+    Workbook workbook = workbookComposeHelper.addSheetComposeHelper(sheetComposeHelper).compose(Collections.singletonList(getPersons()), workbookMeta);
 
     // write workbook to excel
-    WorkbookWriter workbookWriter = new Workbook2ExcelWriter(true);
+    WorkbookWriteHelper workbookWriter = new Workbook2ExcelWriteHelper();
 
     workbookWriter.write(workbook, outputStream);
 
