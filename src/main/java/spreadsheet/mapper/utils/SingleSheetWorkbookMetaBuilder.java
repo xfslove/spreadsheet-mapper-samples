@@ -1,10 +1,11 @@
 package spreadsheet.mapper.utils;
 
 import org.apache.commons.lang3.StringUtils;
-import spreadsheet.mapper.Constants;
 import spreadsheet.mapper.model.meta.*;
 import spreadsheet.mapper.o2w.WorkbookMetaBuilder;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +47,15 @@ public class SingleSheetWorkbookMetaBuilder implements WorkbookMetaBuilder {
       if (fieldMeta == null) {
         continue;
       }
-      fieldMeta.addHeaderMeta(new HeaderMetaBean(promptRowIndex, entry.getValue()));
+      HeaderMeta headerMeta = fieldMeta.getHeaderMeta(promptRowIndex);
+
+      if (headerMeta == null) {
+        fieldMeta.addHeaderMeta(new HeaderMetaBean(promptRowIndex, entry.getValue()));
+      } else {
+        List<String> newHeaders = Arrays.asList(headerMeta.getValue(), entry.getValue());
+        fieldMeta.removeHeaderMeta(promptRowIndex);
+        fieldMeta.addHeaderMeta(new HeaderMetaBean(promptRowIndex, StringUtils.join(newHeaders, ",")));
+      }
     }
     return this;
   }
@@ -54,7 +63,19 @@ public class SingleSheetWorkbookMetaBuilder implements WorkbookMetaBuilder {
   public SingleSheetWorkbookMetaBuilder prompt(String field, String... prompts) {
     FieldMeta fieldMeta = sheetMeta.getFieldMeta(field);
     if (fieldMeta != null) {
-      fieldMeta.addHeaderMeta(new HeaderMetaBean(promptRowIndex, StringUtils.join(prompts, Constants.COMMA_SEPARATOR)));
+      HeaderMeta headerMeta = fieldMeta.getHeaderMeta(promptRowIndex);
+
+      if (headerMeta == null) {
+        fieldMeta.addHeaderMeta(new HeaderMetaBean(promptRowIndex, StringUtils.join(prompts, ",")));
+      } else {
+        List<String> newHeaders = new ArrayList<>();
+        newHeaders.add(headerMeta.getValue());
+        newHeaders.addAll(Arrays.asList(prompts));
+
+        fieldMeta.removeHeaderMeta(promptRowIndex);
+        fieldMeta.addHeaderMeta(new HeaderMetaBean(promptRowIndex, StringUtils.join(newHeaders, ",")));
+      }
+
     }
     return this;
   }

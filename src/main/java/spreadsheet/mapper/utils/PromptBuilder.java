@@ -1,7 +1,6 @@
 package spreadsheet.mapper.utils;
 
 import org.apache.commons.lang3.StringUtils;
-import spreadsheet.mapper.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -105,7 +104,7 @@ public class PromptBuilder {
 
     Map<String, String> prompts = new HashMap<>();
     for (Map.Entry<String, List<String>> entry : this.prompts.entrySet()) {
-      prompts.put(entry.getKey(), StringUtils.join(entry.getValue(), Constants.COMMA_SEPARATOR));
+      prompts.put(entry.getKey(), StringUtils.join(entry.getValue(), ","));
     }
     return prompts;
   }
